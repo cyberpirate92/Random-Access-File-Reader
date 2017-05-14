@@ -38,6 +38,7 @@ public class RandomAccessFileReader {
 			StringBuilder stringBuilder = new StringBuilder();
 			int newLineCounter = 0;
 			byte[] tempBuffer = new byte[1];
+			
 			for(; fileHandle.getFilePointer() > 0; fileHandle.seek(fileHandle.getFilePointer()-2)) {
 				fileHandle.read(tempBuffer);
 				String s = new String(tempBuffer);
@@ -50,7 +51,7 @@ public class RandomAccessFileReader {
 				stringBuilder.append(s);
 				tempBuffer = new byte[1];
 			}
-			return stringBuilder.reverse().toString();
+			return stringBuilder.reverse().toString().replace("\n", "").replace("\r", "");
 		}
 	}
 	

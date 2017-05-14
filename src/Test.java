@@ -4,7 +4,7 @@ public class Test {
 	public static void main(String[] a) {
 		try {
 			
-			RandomAccessFileReader reader = new RandomAccessFileReader("TraceFile.log");
+			RandomAccessFileReader reader = new RandomAccessFileReader("sample.txt");
 			Scanner input = new Scanner(System.in);
 			
 			while(true) {
