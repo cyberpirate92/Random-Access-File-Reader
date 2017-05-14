@@ -12,29 +12,38 @@ public class Test {
 				
 				System.out.println("File Operation Tester");
 				System.out.println("---------------------");
-				System.out.println("1 | Read Next Line");
-				System.out.println("2 | Previous Line");
 				System.out.println("3 | Current Offest");
-				System.out.println("4 | Goto offset");
-				System.out.println("5 | Exit");
+				System.out.println("4 | Cycle Forward");
+				System.out.println("5 | Cycle Backward");
+				System.out.println("6 | View Current Buffer");
+				System.out.println("7 | Exit");
 				System.out.print("Your choice: ");
 				int choice = input.nextInt();
 				switch(choice) {
-				case 1:
-					System.out.println(reader.readNextLine());
-					break;
-				case 2:
-					System.out.println(reader.readPreviousLine());
-					break;
 				case 3:
 					System.out.println(reader.getCurrentOffset());
 					break;
-				case 4:
+				/*case 4:
 					System.out.print("Enter Offset [ Max: " + reader.getMaxOffset() + "] : ");
 					offset = input.nextLong();
 					reader.setOffset(offset);
+					break;*/
+				case 4:
+					reader.cycleForward();
 					break;
 				case 5:
+					reader.cycleBackward();
+					break;
+				case 6:
+					System.out.println("\n\n########################  BUFFER CONTENTS ########################");
+					for(String line : reader.getBuffer()) {
+						System.out.println(line);
+					}
+					System.out.println("####################################################################");
+					System.out.println("Buffer Size : " + reader.getCurrentBufferSize());
+					System.out.println("\n");
+					break;
+				case 7:
 					input.close();
 					reader.close();
 					System.exit(0);
