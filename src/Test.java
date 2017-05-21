@@ -16,7 +16,8 @@ public class Test {
 				System.out.println("4 | Cycle Forward");
 				System.out.println("5 | Cycle Backward");
 				System.out.println("6 | View Current Buffer");
-				System.out.println("7 | Exit");
+				System.out.println("7 | Buffer Size");
+				System.out.println("8 | Exit");
 				System.out.print("Your choice: ");
 				int choice = input.nextInt();
 				switch(choice) {
@@ -37,13 +38,16 @@ public class Test {
 				case 6:
 					System.out.println("\n\n########################  BUFFER CONTENTS ########################");
 					for(String line : reader.getBuffer()) {
-						System.out.println(line);
+						System.out.println(line.replace("\n", "").replace("\r", ""));
 					}
 					System.out.println("####################################################################");
-					System.out.println("Buffer Size : " + reader.getCurrentBufferSize());
+					System.out.println("Buffer Size : " + reader.getBufferSize());
 					System.out.println("\n");
 					break;
 				case 7:
+					System.out.println(reader.getBufferSize());
+					break;
+				case 8:
 					input.close();
 					reader.close();
 					System.exit(0);
