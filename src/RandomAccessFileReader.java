@@ -93,19 +93,15 @@ public class RandomAccessFileReader {
 			fileHandle.seek(fileHandle.getFilePointer()-1);
 			
 			StringBuilder stringBuilder = new StringBuilder();
-			int newLineCounter = 0;
 			byte[] tempBuffer = new byte[1];
 			
-			for(; fileHandle.getFilePointer() > 0; fileHandle.seek(fileHandle.getFilePointer()-2)) {
+			for(; fileHandle.getFilePointer() >= 0; fileHandle.seek(fileHandle.getFilePointer()-2)) {
 				fileHandle.read(tempBuffer);
 				String s = new String(tempBuffer);
 				stringBuilder.append(s);
 				tempBuffer = new byte[1];
 				if(s.contains("\n")) {
-					newLineCounter++;
-					if(newLineCounter == 2) {
-						break;
-					}
+					break;
 				}
 			}
 			return stringBuilder.reverse().toString();
