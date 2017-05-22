@@ -47,6 +47,7 @@ public class RandomAccessFileReader {
 		byte[] tempBuffer = new byte[1];
 		
 		for(; pointer.getFilePointer() > 0; pointer.seek(pointer.getFilePointer()-2)) {
+			//printPointers();
 			pointer.read(tempBuffer);
 			String s = new String(tempBuffer);
 			stringBuilder.append(s);
@@ -58,6 +59,14 @@ public class RandomAccessFileReader {
 				}
 			}
 		}
+		
+		// corner case
+		if(pointer.getFilePointer() == 0) {
+			pointer.read(tempBuffer);
+			stringBuilder.append(new String(tempBuffer));
+			pointer.seek(0);
+		}
+		
 		return stringBuilder.reverse().toString().replace("\n", "").replace("\r", "");
 	}
 	

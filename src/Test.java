@@ -8,8 +8,6 @@ public class Test {
 			Scanner input = new Scanner(System.in);
 			
 			while(true) {
-				long offset;
-				
 				System.out.println("File Operation Tester");
 				System.out.println("---------------------");
 				System.out.println("3 | Current Offest");
@@ -23,11 +21,6 @@ public class Test {
 				case 3:
 					System.out.println(reader.getCurrentOffset());
 					break;
-				/*case 4:
-					System.out.print("Enter Offset [ Max: " + reader.getMaxOffset() + "] : ");
-					offset = input.nextLong();
-					reader.setOffset(offset);
-					break;*/
 				case 4:
 					reader.cycleForward();
 					break;
