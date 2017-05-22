@@ -15,6 +15,7 @@ public class Test {
 				System.out.println("5 | Cycle Backward");
 				System.out.println("6 | View Current Buffer");
 				System.out.println("7 | Exit");
+				System.out.println("8 | Search");
 				System.out.print("Your choice: ");
 				int choice = input.nextInt();
 				switch(choice) {
@@ -40,6 +41,25 @@ public class Test {
 					input.close();
 					reader.close();
 					System.exit(0);
+					break;
+				case 8:
+					System.out.println("Enter Search String");
+					String searchString=input.nextLine();
+					System.out.println("select one type of search 1.Forward 2.Backward");
+					int ch = input.nextInt();
+					if(ch == 1)
+					{
+						
+						System.out.println("forward searching");
+						reader.SearchStringForward(searchString);
+					}
+					else
+					{
+						
+						System.out.println("backward searching");
+						reader.SearchStringBackward(searchString);
+					}
+					break;
 				default:
 					System.out.println("Choose a valid choice");	
 				}
