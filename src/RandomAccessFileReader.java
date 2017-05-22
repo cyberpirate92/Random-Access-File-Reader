@@ -6,20 +6,23 @@ import java.util.ArrayList;
 
 public class RandomAccessFileReader {
 	
-	private RandomAccessFile fileHandle;
-	private boolean isForwardFacing = true;
+	private RandomAccessFile top, bottom;
 	private ArrayList<String> buffer;
-	private static final int DEFAULT_BUFFER_SIZE = 5;
-	private int bufferSize;
-	private boolean firstReverse = true; 
+	
+	private static final long DEFAULT_BUFFER_SIZE = 4;
 	
 	public RandomAccessFileReader(String filename) throws IOException, FileNotFoundException {
 		try {
-			fileHandle = new RandomAccessFile(new File(filename), "r");
-			fileHandle.seek(0);
-			this.buffer = new ArrayList<String>();
-			this.bufferSize = RandomAccessFileReader.DEFAULT_BUFFER_SIZE;
-			this.cycleForward();	// initial buffer fill
+			top = new RandomAccessFile(new File(filename), "r");
+			bottom = new RandomAccessFile(new File(filename), "r");
+			buffer = new ArrayList<String>();
+			
+			top.seek(0);
+			bottom.seek(0);
+			buffer.ensureCapacity(4);
+			
+			initializeBuffer();
+			
 		}
 		catch(FileNotFoundException fileNotFoundException) {
 			fileNotFoundException.printStackTrace();
@@ -31,109 +34,46 @@ public class RandomAccessFileReader {
 		}
 	}
 	
-	public RandomAccessFileReader(String filename, int bufferSize) throws IOException, FileNotFoundException {
-		this(filename);
-		if(bufferSize > 0) {
-			this.bufferSize = bufferSize;
-		}
+	public String readNextLine(RandomAccessFile pointer) throws IOException {
+		return pointer.readLine();
 	}
 	
-	public void moveCursorToStartOfBuffer() throws IOException {
-		this.fileHandle.seek(this.fileHandle.getFilePointer() - (getBufferLength()+1));
-		this.isForwardFacing = false;
-	}
-	
-	public void moveCursorToEndOfBuffer() throws IOException {
-		this.fileHandle.seek(this.fileHandle.getFilePointer() + (getBufferLength()+1));
-		this.isForwardFacing = true;
-	}
-	
-	public long getBufferLength() {
-		long length = 0;
-		for(String s : buffer)
-			length += s.length();
-		return length;
-	}
-	
-	public String readNextLine() throws IOException {
-		if(!isForwardFacing) {
-			moveCursorToEndOfBuffer();
-		}
-		if(fileHandle.getFilePointer() < fileHandle.length()) {
-			
-			StringBuilder stringBuilder = new StringBuilder();
-			byte[] tempBuffer = new byte[1];
-			
-			for(; fileHandle.getFilePointer() < fileHandle.length() ;) {
-				fileHandle.read(tempBuffer);
-				String s = new String(tempBuffer);
-				stringBuilder.append(s);
-				tempBuffer = new byte[1];
-				if(s.contains("\n")) {
+	public String readPreviousLine(RandomAccessFile pointer) throws IOException {
+		
+		pointer.seek(pointer.getFilePointer()-1);
+		
+		StringBuilder stringBuilder = new StringBuilder();
+		int newLineCounter = 0;
+		byte[] tempBuffer = new byte[1];
+		
+		for(; pointer.getFilePointer() > 0; pointer.seek(pointer.getFilePointer()-2)) {
+			pointer.read(tempBuffer);
+			String s = new String(tempBuffer);
+			stringBuilder.append(s);
+			tempBuffer = new byte[1];
+			if(s.contains("\n")) {
+				newLineCounter++;
+				if(newLineCounter == 2) {
 					break;
 				}
 			}
-			System.out.println("Next Line: <"+ stringBuilder.toString() +">");
-			return stringBuilder.toString();
 		}
-		else {
-			// currently at end of file, cannot read next line
-			return null;
-		}
-	}
-	
-	public String readPreviousLine() throws IOException {
-		if(isForwardFacing) {
-			moveCursorToStartOfBuffer();
-		}
-		if(getCurrentOffset() <= 0) {
-			// currently at beginning of file, cannot read previous line
-			return null;
-		}
-		else {
-			
-			fileHandle.seek(fileHandle.getFilePointer()-1);
-			
-			StringBuilder stringBuilder = new StringBuilder();
-			byte[] tempBuffer = new byte[1];
-			int lineCounter = 0;
-			for(; fileHandle.getFilePointer() >= 0; fileHandle.seek(fileHandle.getFilePointer()-2)) {
-				fileHandle.read(tempBuffer);
-				String s = new String(tempBuffer);
-				stringBuilder.append(s);
-				tempBuffer = new byte[1];
-				if(s.contains("\n")) {
-					if(firstReverse) {
-						firstReverse = false;
-						break;
-					}
-					else if( ++lineCounter == 2) {
-						break;
-					}
-				}
-				if(fileHandle.getFilePointer() < 2) {
-					break;
-				}
-			}
-			String line = stringBuilder.reverse().toString();
-			System.out.println("Previous line: <" + line + ">");
-			return line;
-		}
+		return stringBuilder.reverse().toString().replace("\n", "").replace("\r", "");
 	}
 	
 	public long getMaxOffset() throws IOException {
-		return fileHandle.length();
+		return bottom.length();
 	}
 	
 	public void setOffset(long position) throws IOException{
 		if(position >= 0 && position <= getMaxOffset()) {
-			this.fileHandle.seek(position);
+			this.bottom.seek(position);
 		}
 	}
 	
 	public long getCurrentOffset() throws IOException {
-		if(fileHandle != null) {
-			return fileHandle.getFilePointer();
+		if(bottom != null) {
+			return bottom.getFilePointer();
 		}
 		else {
 			throw new NullPointerException("File pointer is null");
@@ -141,64 +81,53 @@ public class RandomAccessFileReader {
 	}
 	
 	public void close() throws IOException {
-		if(fileHandle != null) {
-			fileHandle.close();
+		if(bottom != null) {
+			bottom.close();
+		}
+	}
+	
+	public void initializeBuffer() throws IOException {
+		while(buffer.size() < RandomAccessFileReader.DEFAULT_BUFFER_SIZE) {
+			buffer.add(bottom.readLine());
 		}
 	}
 	
 	public void cycleForward() throws IOException {
-		if(fileHandle != null) {
-			if(buffer.size() == 0) {
-				// fill the buffer
-				for(;buffer.size() < this.bufferSize;) {
-					String line = this.readNextLine();
-					if(line != null) {
-						buffer.add(line);
-					}
-					else {
-						break;
-					}
-				}
-			}
-			else  {
-				String line = this.readNextLine();
-				if(line != null) {
-					buffer.remove(0);
-					buffer.add(line);
-				}
-			}
+		if(bottom.getFilePointer() < bottom.length()) {
+			readNextLine(top);
+			String nextLine = readNextLine(bottom);
+			buffer.remove(0);
+			buffer.add(nextLine);
+		}
+		else {
+			System.out.println("Reached end of file, cannot read further");
 		}
 	}
 	
 	public void cycleBackward() throws IOException {
-		if(fileHandle != null) {
-			if(buffer.size() == 0) {
-				// fill the buffer
-				for(;buffer.size() < this.bufferSize;) {
-					String line = this.readNextLine();
-					if(line != null) {
-						buffer.add(line);
-					}
-					else {
-						break;
-					}
-				}
-			}
-			else  {
-				String line = this.readPreviousLine();
-				if(line != null) {
-					buffer.remove(buffer.size()-1);
-					buffer.add(0, line);
-				}
-			}
+		if(top.getFilePointer() > 0) {
+			readPreviousLine(bottom);
+			String previousLine = readPreviousLine(top);
+			buffer.remove(buffer.size()-1);		// remove last element
+			buffer.add(0, previousLine);		// add previous line to start of buffer
 		}
-	}
-	
-	public int getBufferSize() {
-		return this.buffer.size();
+		else {
+			System.out.println("Reached start of file, cannot read backward");
+		}
 	}
 	
 	public ArrayList<String> getBuffer() {
 		return this.buffer;
+	}
+	
+	public long getBufferSize() {
+		return this.buffer.size();
+	}
+	
+	// debug method
+	public void printPointers() throws IOException {
+		System.out.println("TOP			: " + top.getFilePointer());
+		System.out.println("BOTTOM		: " + bottom.getFilePointer());
+		System.out.println("DIFFERENCE	: " + (bottom.getFilePointer() - top.getFilePointer()));
 	}
 }
