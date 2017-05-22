@@ -72,6 +72,7 @@ public class RandomAccessFileReader {
 					break;
 				}
 			}
+			System.out.println("Next Line: <"+ stringBuilder.toString() +">");
 			return stringBuilder.toString();
 		}
 		else {
@@ -94,17 +95,24 @@ public class RandomAccessFileReader {
 			
 			StringBuilder stringBuilder = new StringBuilder();
 			byte[] tempBuffer = new byte[1];
-			
+			int lineCounter = 0;
 			for(; fileHandle.getFilePointer() >= 0; fileHandle.seek(fileHandle.getFilePointer()-2)) {
 				fileHandle.read(tempBuffer);
 				String s = new String(tempBuffer);
 				stringBuilder.append(s);
 				tempBuffer = new byte[1];
 				if(s.contains("\n")) {
+					if( ++lineCounter == 2) {
+						break;
+					}
+				}
+				if(fileHandle.getFilePointer() < 2) {
 					break;
 				}
 			}
-			return stringBuilder.reverse().toString();
+			String line = stringBuilder.reverse().toString();
+			System.out.println("Previous line: <" + line + ">");
+			return line;
 		}
 	}
 	
