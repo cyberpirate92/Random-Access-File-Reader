@@ -7,14 +7,19 @@ import java.util.Scanner;
 
 public class RandomAccessFileReader {
 	
+	private String filename;
 	private RandomAccessFile top, bottom;
-	private ArrayList<String> buffer;
+	private RandomAccessFile searchTop, searchBottom;
+	private ArrayList<String> buffer, searchBuffer;
 	private boolean found;
 	Scanner input = new Scanner(System.in);
 	private static final long DEFAULT_BUFFER_SIZE = 4;
 	
 	public RandomAccessFileReader(String filename) throws IOException, FileNotFoundException {
 		try {
+			
+			this.filename = filename;
+			
 			top = new RandomAccessFile(new File(filename), "r");
 			bottom = new RandomAccessFile(new File(filename), "r");
 			buffer = new ArrayList<String>();
@@ -142,33 +147,60 @@ public class RandomAccessFileReader {
 		System.out.println("DIFFERENCE	: " + (bottom.getFilePointer() - top.getFilePointer()));
 	}
 	
-	public void SearchStringForward(String searchString) throws IOException {
-		if(!found){
-			SearchInBuffer(searchString);
-			for(int i=0;i<DEFAULT_BUFFER_SIZE;i++){
-				cycleForward();
-			}
-		}
+	public void initializeSearch() throws IOException {
+		this.searchBuffer = new ArrayList<String>();
+		this.searchBuffer.addAll(this.buffer);
+		this.searchTop = new RandomAccessFile(this.filename, "r");
+		this.searchBottom = new RandomAccessFile(this.filename, "r");
+		this.searchTop.seek(this.top.getFilePointer());
+		this.searchBottom.seek(this.bottom.getFilePointer());
 	}
 	
-    public void SearchStringBackward(String searchString) throws IOException {
-    	if(!found){
-			SearchInBuffer(searchString);
-			for(int i=0;i<DEFAULT_BUFFER_SIZE;i++){
-				cycleBackward();
-			}
-		}
-		
+	public void terminateSearch() throws IOException {
+		this.searchBuffer = null;
+		this.searchTop.close();
+		this.searchBottom.close();
 	}
 	
-    public void SearchInBuffer(String searchString)
-    {
-    	for(String S:buffer){
-			if(S.contains(searchString)){
-				System.out.println("String found at line : " +S);
-				found=true;
+	public ArrayList<String> searchForward(String searchTerm) throws IOException {
+		initializeSearch();
+		while ( true ) {
+			this.readNextLine(searchTop);
+			String nextLine = this.readNextLine(searchBottom);
+			this.searchBuffer.remove(0);
+			this.searchBuffer.add(nextLine);
+			if(nextLine == null) {
 				break;
 			}
+			else if(nextLine.contains(searchTerm)) {
+				ArrayList<String> copy = new ArrayList<String>();
+				copy.addAll(searchBuffer);
+				terminateSearch();
+				return copy;
+			}
 		}
-    }
+		terminateSearch();
+		return null;
+	}
+	
+	public ArrayList<String> searchBackward(String searchTerm) throws IOException {
+		initializeSearch();
+		while ( true ) {
+			String previousLine = this.readPreviousLine(searchTop);
+			this.readPreviousLine(searchBottom);
+			this.searchBuffer.remove(this.searchBuffer.size()-1);
+			this.searchBuffer.add(0, previousLine);
+			if(previousLine == null) {
+				break;
+			}
+			else if(previousLine.contains(searchTerm)) {
+				ArrayList<String> copy = new ArrayList<String>();
+				copy.addAll(searchBuffer);
+				terminateSearch();
+				return copy;
+			}
+		}
+		terminateSearch();
+		return null;
+	}
 }
