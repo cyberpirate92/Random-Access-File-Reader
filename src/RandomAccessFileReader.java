@@ -11,6 +11,7 @@ public class RandomAccessFileReader {
 	private ArrayList<String> buffer;
 	private static final int DEFAULT_BUFFER_SIZE = 5;
 	private int bufferSize;
+	private boolean firstReverse = true; 
 	
 	public RandomAccessFileReader(String filename) throws IOException, FileNotFoundException {
 		try {
@@ -102,7 +103,11 @@ public class RandomAccessFileReader {
 				stringBuilder.append(s);
 				tempBuffer = new byte[1];
 				if(s.contains("\n")) {
-					if( ++lineCounter == 2) {
+					if(firstReverse) {
+						firstReverse = false;
+						break;
+					}
+					else if( ++lineCounter == 2) {
 						break;
 					}
 				}
