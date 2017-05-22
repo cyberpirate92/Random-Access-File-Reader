@@ -3,12 +3,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class RandomAccessFileReader {
 	
 	private RandomAccessFile top, bottom;
 	private ArrayList<String> buffer;
-	
+	private boolean found;
+	Scanner input = new Scanner(System.in);
 	private static final long DEFAULT_BUFFER_SIZE = 4;
 	
 	public RandomAccessFileReader(String filename) throws IOException, FileNotFoundException {
@@ -139,4 +141,34 @@ public class RandomAccessFileReader {
 		System.out.println("BOTTOM		: " + bottom.getFilePointer());
 		System.out.println("DIFFERENCE	: " + (bottom.getFilePointer() - top.getFilePointer()));
 	}
+	
+	public void SearchStringForward(String searchString) throws IOException {
+		if(!found){
+			SearchInBuffer(searchString);
+			for(int i=0;i<DEFAULT_BUFFER_SIZE;i++){
+				cycleForward();
+			}
+		}
+	}
+	
+    public void SearchStringBackward(String searchString) throws IOException {
+    	if(!found){
+			SearchInBuffer(searchString);
+			for(int i=0;i<DEFAULT_BUFFER_SIZE;i++){
+				cycleBackward();
+			}
+		}
+		
+	}
+	
+    public void SearchInBuffer(String searchString)
+    {
+    	for(String S:buffer){
+			if(S.contains(searchString)){
+				System.out.println("String found at line : " +S);
+				found=true;
+				break;
+			}
+		}
+    }
 }
